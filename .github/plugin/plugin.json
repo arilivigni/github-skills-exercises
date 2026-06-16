@@ -1,0 +1,27 @@
+{
+  "name": "github-skills-exercises",
+  "description": "Design, build, review, and publish GitHub Skills-style exercises with custom agents and Agent Skills for learner journeys, workflow-backed validation, and release readiness.",
+  "version": "1.0.0",
+  "keywords": [
+    "github-skills",
+    "education",
+    "curriculum",
+    "exercise-creation",
+    "custom-agents",
+    "agent-skills"
+  ],
+  "author": {
+    "name": "Ari LiVigni"
+  },
+  "repository": "https://github.com/arilivigni/github-skills-exercises",
+  "license": "MIT",
+  "agents": [
+    "./agents"
+  ],
+  "skills": [
+    "./skills/create-github-skills-outline",
+    "./skills/bootstrap-github-skills-exercise",
+    "./skills/review-github-skills-exercise",
+    "./skills/publish-github-skills-exercise"
+  ]
+}
