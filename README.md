@@ -135,12 +135,20 @@ This plugin follows strict semantic versioning:
 3. Tag and publish from `main`:
 
 ```shell
-git tag v1.0.0
-git push origin v1.0.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 4. Verify the tag points to the intended commit:
 
 ```shell
+git rev-parse vX.Y.Z
+```
+
+Example first stable release:
+
+```shell
+git tag v1.0.0
+git push origin v1.0.0
 git rev-parse v1.0.0
 ```
