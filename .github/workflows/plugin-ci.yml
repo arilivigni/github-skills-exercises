@@ -1,0 +1,99 @@
+name: Plugin CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate plugin manifest JSON syntax
+        run: python3 -m json.tool .github/plugin/plugin.json >/dev/null
+
+      - name: Validate plugin references and skill metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path(".")
+          manifest_path = root / ".github/plugin/plugin.json"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+          failures = []
+
+          for key in ("agents", "skills"):
+            entries = manifest.get(key, [])
+            if not isinstance(entries, list):
+              failures.append(f'"{key}" must be a list in {manifest_path}')
+              continue
+            for rel in entries:
+              path = (root / rel).resolve()
+              if not path.exists():
+                failures.append(f'Missing referenced path in "{key}": {rel}')
+
+          for skill_entry in manifest.get("skills", []):
+            skill_dir = root / skill_entry
+            skill_md = skill_dir / "SKILL.md"
+            if not skill_md.exists():
+              failures.append(f'Missing SKILL.md in skill directory: {skill_entry}')
+              continue
+
+            text = skill_md.read_text(encoding="utf-8")
+            if "name:" not in text or "description:" not in text:
+              failures.append(f'SKILL.md is missing required frontmatter fields in {skill_entry}')
+
+          if failures:
+            print("Validation failures:")
+            for failure in failures:
+              print(f"- {failure}")
+            raise SystemExit(1)
+
+          print("Plugin reference validation passed.")
+          PY
+
+      - name: Validate README local markdown links
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          from urllib.parse import urlparse
+
+          readme = Path("README.md")
+          text = readme.read_text(encoding="utf-8")
+          pattern = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+          failures = []
+
+          for target in pattern.findall(text):
+            clean = target.strip()
+            if not clean or clean.startswith("#"):
+              continue
+            if clean.startswith(("http://", "https://", "mailto:")):
+              continue
+
+            parsed = urlparse(clean)
+            path_part = parsed.path
+            if not path_part:
+              continue
+
+            resolved = (readme.parent / path_part).resolve()
+            if not resolved.exists():
+              failures.append(f"Broken local link target: {clean}")
+
+          if failures:
+            print("README link failures:")
+            for failure in failures:
+              print(f"- {failure}")
+            raise SystemExit(1)
+
+          print("README link validation passed.")
+          PY

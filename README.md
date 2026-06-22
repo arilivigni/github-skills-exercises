@@ -109,3 +109,38 @@ The Awesome Copilot plugin spec declares plugin content with `agents`, `commands
 ## Evaluation
 
 Test prompts are in `evals/evals.json`. They cover outline creation, bootstrap planning, quality review, and publish readiness.
+
+## Release process (SemVer)
+
+This plugin follows strict semantic versioning:
+
+| Change type | Version bump | Examples |
+| --- | --- | --- |
+| Breaking behavior or contract changes | **MAJOR** (`X.0.0`) | Renaming/removing expected capabilities or changing required usage patterns |
+| New non-breaking capabilities | **MINOR** (`X.Y.0`) | Adding agents, skills, or non-breaking plugin features |
+| Fixes and non-breaking maintenance | **PATCH** (`X.Y.Z`) | Bug fixes, docs updates, wording improvements |
+
+### CI gate
+
+`.github/workflows/plugin-ci.yml` runs on pull requests and pushes to `main` and validates:
+- `.github/plugin/plugin.json` syntax
+- referenced agent and skill paths from the plugin manifest
+- required `name` and `description` metadata presence in each skill `SKILL.md`
+- local markdown links in `README.md`
+
+### Deployment plan
+
+1. Merge to `main` only after CI is green.
+2. Update `.github/plugin/plugin.json` `version` to the selected SemVer.
+3. Tag and publish from `main`:
+
+```shell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+4. Verify the tag points to the intended commit:
+
+```shell
+git rev-parse v1.0.0
+```
