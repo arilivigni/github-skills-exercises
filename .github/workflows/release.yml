@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.0.1). Must match .github/plugin/plugin.json version. Leave blank to use the manifest value."
+        required: false
+        type: string
+      prerelease:
+        description: "Mark this release as a pre-release"
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: "Create the release as a draft"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve and validate version
+        id: version
+        run: |
+          set -euo pipefail
+          manifest_version=$(python3 -c 'import json; print(json.load(open(".github/plugin/plugin.json"))["version"])')
+          input_version='${{ inputs.version }}'
+          version="${input_version:-$manifest_version}"
+          version="${version#v}"
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Version '$version' is not valid semver."
+            exit 1
+          fi
+
+          if [[ "$version" != "$manifest_version" ]]; then
+            echo "::error::Input version ($version) does not match plugin.json version ($manifest_version). Bump the manifest first."
+            exit 1
+          fi
+
+          tag="v$version"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists. Bump the version in plugin.json."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Releasing $tag from ${GITHUB_SHA}"
+
+      - name: Run plugin validation
+        run: |
+          python3 -m json.tool .github/plugin/plugin.json >/dev/null
+          test -f README.md
+          test -d agents
+          test -d skills
+
+      - name: Create and push tag
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          DRAFT: ${{ inputs.draft }}
+        run: |
+          args=(--generate-notes --title "$TAG" --target "$GITHUB_SHA")
+          if [[ "$PRERELEASE" == "true" ]]; then
+            args+=(--prerelease)
+          fi
+          if [[ "$DRAFT" == "true" ]]; then
+            args+=(--draft)
+          fi
+          gh release create "$TAG" "${args[@]}"
