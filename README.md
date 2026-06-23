@@ -10,6 +10,9 @@ Install directly from this repository:
 copilot plugin install arilivigni/gh-skills-builder
 ```
 
+> [!WARNING]
+> Copilot CLI currently supports direct repository installs but marks them as deprecated. Keep this path as a fallback until this plugin is indexed in a marketplace, then prefer `plugin@marketplace` installs.
+
 Or from within an interactive Copilot session:
 
 ```
@@ -17,10 +20,11 @@ Or from within an interactive Copilot session:
 ```
 
 > [!NOTE]
-> This first adds `arilivigni/gh-skills-builder` as a plugin marketplace, then installs the plugin. You can verify the install with:
+> Installing from `arilivigni/gh-skills-builder` performs a direct repository install. You can verify the install with:
 > ```shell
 > copilot plugin list
 > ```
+> After install, manage the plugin by name (`gh-skills-builder`) for update and uninstall commands.
 
 To update to the latest version:
 
@@ -34,14 +38,14 @@ To remove the plugin:
 copilot plugin uninstall gh-skills-builder
 ```
 
-### Copilot in VS Code
+### Copilot App
 
-1. Open the Extensions view and type `@agentPlugins` in the search bar, **or** open the Command Palette (`⌘⇧P` / `Ctrl+Shift+P`) and run **Chat: Plugins**.
-2. Search for **gh-skills-builder**.
-3. Click **Install**.
+1. Open the Copilot App and go to **Plugins**.
+2. Select **Add plugin**, then provide `arilivigni/gh-skills-builder`.
+3. Confirm install, then enable the plugin for your chat/session.
 
 > [!TIP]
-> You can also open the Command Palette and run **Chat: Plugins** at any time to manage or disable installed plugins.
+> If you prefer VS Code, open the Command Palette (`⌘⇧P` / `Ctrl+Shift+P`), run **Chat: Plugins**, then install **gh-skills-builder** from the plugin picker.
 
 ## What's Included
 
@@ -131,19 +135,33 @@ This plugin follows strict semantic versioning:
 ### Deployment plan
 
 1. Merge to `main` only after CI is green.
-2. Update `.github/plugin/plugin.json` `version` to the selected SemVer.
-3. Tag and publish from `main`:
+2. Confirm `.github/plugin/plugin.json` has the intended release version.
+3. Prepare and verify first-release metadata from `main`:
 
-```shell
-git tag vX.Y.Z
-git push origin vX.Y.Z
-```
+   ```shell
+   python3 -m json.tool .github/plugin/plugin.json >/dev/null
+   grep '"version"' .github/plugin/plugin.json
+   ```
 
-4. Verify the tag points to the intended commit:
+4. Validate install paths before tagging (use direct repo install as fallback until marketplace listing is available):
 
-```shell
-git rev-parse vX.Y.Z
-```
+   ```shell
+   copilot plugin install arilivigni/gh-skills-builder
+   copilot plugin list
+   ```
+
+5. Tag and publish from `main`:
+
+   ```shell
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+6. Verify the tag points to the intended commit:
+
+   ```shell
+   git rev-parse vX.Y.Z
+   ```
 
 Example first stable release:
 
