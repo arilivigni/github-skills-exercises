@@ -10,6 +10,9 @@ Install directly from this repository:
 copilot plugin install arilivigni/gh-skills-builder
 ```
 
+> [!WARNING]
+> Copilot CLI currently supports direct repository installs but marks them as deprecated. Keep this path as a fallback until this plugin is indexed in a marketplace, then prefer `plugin@marketplace` installs.
+
 Or from within an interactive Copilot session:
 
 ```
@@ -140,7 +143,7 @@ python3 -m json.tool .github/plugin/plugin.json >/dev/null
 grep '"version"' .github/plugin/plugin.json
 ```
 
-4. Validate install paths before tagging:
+4. Validate install paths before tagging (use direct repo install as fallback until marketplace listing is available):
 
 ```shell
 copilot plugin install arilivigni/gh-skills-builder
