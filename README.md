@@ -138,30 +138,30 @@ This plugin follows strict semantic versioning:
 2. Confirm `.github/plugin/plugin.json` has the intended release version.
 3. Prepare and verify first-release metadata from `main`:
 
-```shell
-python3 -m json.tool .github/plugin/plugin.json >/dev/null
-grep '"version"' .github/plugin/plugin.json
-```
+   ```shell
+   python3 -m json.tool .github/plugin/plugin.json >/dev/null
+   grep '"version"' .github/plugin/plugin.json
+   ```
 
 4. Validate install paths before tagging (use direct repo install as fallback until marketplace listing is available):
 
-```shell
-copilot plugin install arilivigni/gh-skills-builder
-copilot plugin list
-```
+   ```shell
+   copilot plugin install arilivigni/gh-skills-builder
+   copilot plugin list
+   ```
 
 5. Tag and publish from `main`:
 
-```shell
-git tag vX.Y.Z
-git push origin vX.Y.Z
-```
+   ```shell
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
 
 6. Verify the tag points to the intended commit:
 
-```shell
-git rev-parse vX.Y.Z
-```
+   ```shell
+   git rev-parse vX.Y.Z
+   ```
 
 Example first stable release:
 
